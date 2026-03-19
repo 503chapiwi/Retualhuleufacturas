@@ -91,7 +91,7 @@ if st.button("INICIAR PROCESO") and uploaded_pdfs and uploaded_xlsx:
         
         if "Extra Detalles" not in wb.sheetnames:
             ws_det = wb.create_sheet("Extra Detalles")
-            ws_det.append(['Nombre Emisor', 'NIT Emisor', 'NIT Receptor', 'UUID', 'Municipio', 'Alerta % Abarrotes'])
+            ws_det.append(['Nombre Emisor', 'NIT Emisor', 'NIT Receptor', 'Num. DTE', 'Municipio', 'Alerta % Abarrotes'])
         else:
             ws_det = wb["Extra Detalles"]
 
@@ -124,14 +124,15 @@ if st.button("INICIAR PROCESO") and uploaded_pdfs and uploaded_xlsx:
 
         # 2. MASTER MUNICIPALITY DICTIONARY
         MUNICIPIOS = {
-            1: {"nombre_oficial": "Totonicapán", "alias_pdf": ["totonicapan totonicapan", "totonicapan, totonicapan", "totonicapan"]},
-            2: {"nombre_oficial": "San Cristóbal Totonicapán", "alias_pdf": ["san cristobal totonicapan", "san cristobal"]},
-            3: {"nombre_oficial": "San Francisco El Alto", "alias_pdf": ["san francisco el alto", "san francisco"]},
-            4: {"nombre_oficial": "San Andrés Xecul", "alias_pdf": ["san andres xecul", "san andres"]},
-            5: {"nombre_oficial": "Momostenango", "alias_pdf": ["momostenango"]},
-            6: {"nombre_oficial": "Santa María Chiquimula", "alias_pdf": ["santa maria chiquimula", "sta maria chiquimula", "santa maria", "sta maria"]},
-            7: {"nombre_oficial": "Santa Lucía La Reforma", "alias_pdf": ["santa lucia la reforma", "sta lucia la reforma", "santa lucia", "sta lucia"]},
-            8: {"nombre_oficial": "San Bartolo Aguas Calientes", "alias_pdf": ["san bartolo aguas calientes", "san bartolo"]}
+            1: {"nombre_oficial": "Champerico", "alias_pdf": [""]},
+            2: {"nombre_oficial": "El Asintal", "alias_pdf": [""]},
+            3: {"nombre_oficial": "Nuevo San Carlos", "alias_pdf": [""]},
+            4: {"nombre_oficial": "Retalhuleu", "alias_pdf": [""]},
+            5: {"nombre_oficial": "San Andres Villa Seca", "alias_pdf": [""]},
+            6: {"nombre_oficial": "San Felipe", "alias_pdf": [""]},
+            7: {"nombre_oficial": "San Martin Zapotitlan", "alias_pdf": [""]},
+            8: {"nombre_oficial": "San Sebastian", "alias_pdf": [""]},
+            9: {"nombre_oficial": "Santa Cruz Mulua", "alias_pdf": [""]}
         }
         
         search_list = []
@@ -144,8 +145,9 @@ if st.button("INICIAR PROCESO") and uploaded_pdfs and uploaded_xlsx:
         search_list.sort(key=lambda x: (x[1] == 1, -len(x[0])))
 
         EXCEL_MAPPINGS = {
-            1: "totonicapán", 2: "san cristobal", 3: "san francisco", 4: "san andres",
-            5: "momostenango", 6: "santa maria", 7: "santa lucia", 8: "san bartolo"
+            1: "Champerico", 2: "El Asintal", 3: "nuevo san carlos", 4: "retalhuleu", 
+            5: "san andres villa seca", 6: "san felipe", 7: "san martin zapotitlan", 8: "san sebastian", 
+            9: "san cruz mulua", 
         }
 
         # 3. Map Excel Rows to Municipalities
@@ -172,8 +174,8 @@ if st.button("INICIAR PROCESO") and uploaded_pdfs and uploaded_xlsx:
                     t = p.extract_table()
                     if t: tables.extend(t)
 
-                uuid_m = re.search(r'\b[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}\b', text, re.I)
-                uuid_val = uuid_m.group(0).upper() if uuid_m else pdf_file.name
+                dte_m = re.search(r'N[úu]mero\s*de\s*DTE:\s*(\d+)', text, re.IGNORECASE)
+                dte_val = dte_m.group(1) if dte_m else pdf_file.name
 
                 text_squished = squish_text(text)
                 m_id, m_name = None, "N/A"
@@ -229,7 +231,7 @@ if st.button("INICIAR PROCESO") and uploaded_pdfs and uploaded_xlsx:
                     perc_abar = (abar_sum / total_rec) if total_rec > 0 else 0
                     alert_status = "⚠️ ALERTA: >30%" if perc_abar > 0.30 else "OK"
 
-                    ws_det.append([name_e, nit_e, nit_r, uuid_val, m_name, alert_status])
+                    ws_det.append([name_e, nit_e, nit_r, dte_val, m_name, alert_status])
                     new_count += 1
                 else:
                     st.warning(f"No se pudo identificar el municipio en la factura: {pdf_file.name}")
